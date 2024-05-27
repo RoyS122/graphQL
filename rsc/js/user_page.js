@@ -21,8 +21,8 @@ function createGraphXpTransactions(data, dateAxisSize, xpAxisSize, nbrLastMonth,
 
   let currentXP = startXP;
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.style.height = "500px"
-  svg.style.width = "500px"
+  svg.style.height = `${xpAxisSize + xpAxisSize * 0.1}px`
+  svg.style.width = `${dateAxisSize + dateAxisSize * 0.1}px`
   svg.style.padding = "0px"
   svg.style.margin = "0px"
   var svgNS = svg.namespaceURI;
@@ -127,8 +127,8 @@ function createGraphRatio(data, axisWidth, nodeId) {
 
 
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.style.height = "500px"
-  svg.style.width = "500px"
+  svg.style.height = `${200}px`
+  svg.style.width = `${axisWidth + axisWidth * 0.5}px`
   svg.style.padding = "0px"
   svg.style.margin = "0px"
   var svgNS = svg.namespaceURI;
@@ -196,6 +196,36 @@ function createGraphRatio(data, axisWidth, nodeId) {
   txtValueRust.setAttribute('y', 60)
   txtValueRust.textContent = "Rust"
  svg.appendChild(txtValueRust)
+
+
+
+
+
+ var txtTxJS = document.createElementNS(svgNS, 'text')
+ txtTxJS.setAttribute('font-family', 'Verdana')
+ txtTxJS.setAttribute('font-size', '10')
+ txtTxJS.setAttribute('x', axisWidth + 40)
+ txtTxJS.setAttribute('y', 35)
+ txtTxJS.textContent = `Taux: ${Math.round(dictPiscines.js.pass.length / dictPiscines.js.fail.length * 100) / 100}`
+ svg.appendChild(txtTxJS)
+
+ var txtTxGo = document.createElementNS(svgNS, 'text')
+ txtTxGo.setAttribute('font-family', 'Verdana')
+ txtTxGo.setAttribute('font-size', '10')
+ txtTxGo.setAttribute('x', axisWidth + 40)
+ txtTxGo.setAttribute('y', 10)
+ txtTxGo.textContent = `Taux: ${Math.round((dictPiscines.go.pass.length / dictPiscines.go.fail.length)* 100) / 100}`
+ svg.appendChild(txtTxGo)
+
+
+
+ var txtTxRust = document.createElementNS(svgNS, 'text')
+ txtTxRust.setAttribute('font-family', 'Verdana')
+ txtTxRust.setAttribute('font-size', '10')
+ txtTxRust.setAttribute('x', axisWidth + 40)
+ txtTxRust.setAttribute('y', 60)
+ txtTxRust.textContent = `Taux: ${isNaN(wRust) ? 1 : Math.round(wRust* 100) / 100 }`
+svg.appendChild(txtTxRust)
  
 
 
@@ -203,69 +233,172 @@ function createGraphRatio(data, axisWidth, nodeId) {
   return svg
 }
 export function show_user_info(data) {
-  //header
-  const header_cont = document.createElement("div")
-  const title = document.createElement("h1")
-  title.textContent = `Welcome ${data.data.user[0].firstName} ${data.data.user[0].lastName}`;
-  header_cont.appendChild(title);
-  document.body.appendChild(header_cont)
-  //boutton log-out
-  const logout_button = document.createElement("button")
-  logout_button.textContent = "Log out"
-  document.body.appendChild(logout_button);
-  logout_button.addEventListener("click", () => {
-    localStorage.removeItem("user_login");
-    window.location.reload();
-  });
-
-  var levelIndicator = document.createElement("p")
-  console.log(data.data)
-  levelIndicator.textContent = `Your current level: ${data.data.user[0].events[0].level}`
-  document.body.appendChild(levelIndicator)
-
-  const divGraphXpTransactions = document.createElement("div") 
-  divGraphXpTransactions.id = "divGraphXpTransactions"
-  document.body.appendChild(divGraphXpTransactions)
-
-  let d1 = new Date(data.data.transaction[0].createdAt)
-  let today = new Date()
   
-  const displayRangeActualValue = document.createElement("p")
-  displayRangeActualValue.textContent = `current month displayed: ${12} Months`
+
+  const userData = data.data.user[0];
+  console.log("🚀 ~ showUserInfo ~ userData:", userData);
+
+ 
+
+  const currentDate = new Date();
+  let minimumDate = new Date();
+  let startXP = 0;
+  minimumDate.setMonth(minimumDate.getMonth() - 6);
+  let totalXP = 0;
+  const validTx = data.data.transaction.filter((tx) => {
+    const date = new Date(tx.createdAt);
+    totalXP += tx.amount;
+    if (date < minimumDate) startXP += tx.amount;
+    return date >= minimumDate;
+  });
 
   const details = document.createElement("p")
   details.id = "TXdetailsText"
   
-  const inputRangeMonths = document.createElement("input")
-  inputRangeMonths.type = "range"
-  inputRangeMonths.max = String((today.getFullYear() - d1.getFullYear()) * 12 - d1.getMonth() + today.getMonth()) 
-  inputRangeMonths.min = "1"
-  inputRangeMonths.step = "1"
-  
-  divGraphXpTransactions.appendChild(inputRangeMonths)
-  divGraphXpTransactions.appendChild(displayRangeActualValue)
-  divGraphXpTransactions.appendChild(details)
-  // // SVG ----------
 
-   const dateAxisSize = 300
-   const xpAxisSize = 300
-  
-   divGraphXpTransactions.appendChild(createGraphXpTransactions(data, dateAxisSize, xpAxisSize, inputRangeMonths.value, "svgGraphXpTransactions"));
-  
-   inputRangeMonths.addEventListener('input', () => {
-    displayRangeActualValue.textContent = `current month displayed: ${inputRangeMonths.value} Months`
-    let HeredivGraphXpTransactions = document.getElementById("divGraphXpTransactions")
-    document.getElementById("svgGraphXpTransactions").remove()
+  const stepHor = (currentDate - minimumDate) / 100;
+  const stepVert = (totalXP - startXP) / 100;
 
-    HeredivGraphXpTransactions.appendChild(createGraphXpTransactions(data, dateAxisSize, xpAxisSize, inputRangeMonths.value, "svgGraphXpTransactions"))
-    
-  })
-  let divGraphPassRatio = document.createElement("div")
-  divGraphPassRatio.appendChild(createGraphRatio(data, 200, "node1D"))
-  document.body.appendChild(divGraphPassRatio)
+  let currentXP = startXP;
 
-  // affichage des données récupérés
-    const data_container = document.createElement("div");
-    data_container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-    document.body.appendChild(data_container);
-  }
+  const points = validTx.reduce((accumulator, tx) => {
+    const currentDate = new Date(tx.createdAt);
+    let displacementX = (currentDate - minimumDate) / stepHor;
+    let displacementY = (currentXP - startXP + tx.amount) / stepVert;
+    let x = Math.floor((450 / 100) * displacementX);
+    let y = Math.floor(210 - (210 / 100) * displacementY);
+    currentXP += tx.amount;
+
+    return `${accumulator}${x},${y} `;
+  }, "");
+  console.log("🚀 ~ points ~ points:", points);
+  // Merci TheOldestBrother <3
+  
+  
+
+  const section = document.createElement("section");
+  section.id = "profile-section";
+  section.classList.add("vh-100");
+  section.style.backgroundColor = "#508bfc";
+
+  const container = document.createElement("div");
+  container.classList.add("container", "py-5", "h-100");
+
+  const row = document.createElement("div");
+  row.classList.add(
+    "row",
+    "justify-content-center",
+    "align-items-center",
+    "h-100"
+  );
+
+  const col = document.createElement("div");
+  col.classList.add("col-md-8");
+
+  const card = document.createElement("div");
+  card.classList.add("card");
+
+  const cardHeader = document.createElement("div");
+  cardHeader.classList.add("card-header");
+  cardHeader.innerHTML = "<h3>Profil Utilisateur</h3>";
+
+  const cardBody = document.createElement("div");
+  cardBody.classList.add("card-body");
+
+  const nomLabel = document.createElement("label");
+  nomLabel.textContent = "Nom:";
+  nomLabel.style.paddingRight = "5px";
+  const nomSpan = document.createElement("span");
+  nomSpan.id = "nom";
+  nomSpan.textContent = userData.lastName;
+
+  const prenomLabel = document.createElement("label");
+  prenomLabel.textContent = "Prénom:";
+  prenomLabel.style.paddingRight = "5px";
+  const prenomSpan = document.createElement("span");
+  prenomSpan.id = "prenom";
+  prenomSpan.textContent = userData.firstName;
+
+  const pseudoLabel = document.createElement("label");
+  pseudoLabel.textContent = "Pseudo:";
+  pseudoLabel.style.paddingRight = "5px";
+  const pseudoSpan = document.createElement("span");
+  pseudoSpan.id = "pseudo";
+  pseudoSpan.textContent = userData.login;
+
+  const profileSection = document.createElement("div");
+  profileSection.classList.add("profile-section");
+  profileSection.innerHTML = `
+  <h4>Informations complémentaires</h4>
+  <p>Level: ${userData.events[0].level}</p>
+  <p>Total XP: ${totalXP}</p>
+`;
+
+let d1 = new Date(data.data.transaction[0].createdAt)
+let today = new Date()
+// RESTART HERE ! -----------------------------------------------------------------------------
+
+const inputRangeMonths = document.createElement("input")
+inputRangeMonths.type = "range"
+inputRangeMonths.max = String((today.getFullYear() - d1.getFullYear()) * 12 - d1.getMonth() + today.getMonth()) 
+inputRangeMonths.min = "1"
+inputRangeMonths.step = "1"
+inputRangeMonths.addEventListener("input", () => {
+  document.getElementById("graphXpTransaction").innerHTML =` ${createGraphXpTransactions(data, 200, 200, inputRangeMonths.value,"graphXpTransactionSVG").outerHTML}`  
+  document.getElementById("titleGraphXp").textContent = ` Expérience au cour des ${inputRangeMonths.value} derniers mois `
+})
+  const graphSection = document.createElement("section")
+  graphSection.classList.add("graph-section");
+  graphSection.id = "graphSection"
+  graphSection.innerHTML = `
+<h4>Graphiques</h4>
+<div class="text-center">
+
+<h5 id="titleGraphXp"> Expérience au cour des ${inputRangeMonths.value} derniers mois </h5>
+<div id="graphXpTransaction">
+${createGraphXpTransactions(data, 200, 200, 12,"graphXpTransactionSVG").outerHTML}
+</div>
+<div id="inputRangeMonths">
+
+</div>
+</div>
+<div class="text-center">
+<h5> Taux de réussite des projets durants les différentes piscines </h5>
+${createGraphRatio(data, 200, "graphRatioSVG").outerHTML}
+</div>
+
+`;
+ 
+
+  const logoutButton = document.createElement("button");
+  logoutButton.type = "button";
+  logoutButton.classList.add("btn", "btn-primary");
+  logoutButton.textContent = "Déconnexion";
+  logoutButton.addEventListener("click", () => {
+    localStorage.removeItem("user_login");
+    window.location.reload();
+  });
+
+  document.body.appendChild(section);
+  section.appendChild(container);
+ // section.appendChild(userInfoContainer);
+  container.appendChild(row);
+  row.appendChild(col);
+  col.appendChild(card);
+  card.appendChild(cardHeader);
+  card.appendChild(cardBody);
+  cardBody.appendChild(nomLabel);
+  cardBody.appendChild(nomSpan);
+  cardBody.appendChild(document.createElement("br"));
+  cardBody.appendChild(prenomLabel);
+  cardBody.appendChild(prenomSpan);
+  cardBody.appendChild(document.createElement("br"));
+  cardBody.appendChild(pseudoLabel);
+  cardBody.appendChild(pseudoSpan);
+  cardBody.appendChild(profileSection);
+  cardBody.appendChild(graphSection);
+  document.getElementById("inputRangeMonths").appendChild(inputRangeMonths)
+  cardBody.appendChild(logoutButton);
+}
+
+
