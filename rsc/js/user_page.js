@@ -224,7 +224,7 @@ function createGraphRatio(data, axisWidth, nodeId) {
  txtTxRust.setAttribute('font-size', '10')
  txtTxRust.setAttribute('x', axisWidth + 40)
  txtTxRust.setAttribute('y', 60)
- txtTxRust.textContent = `Taux: ${isNaN(wRust) ? 1 : Math.round(wRust* 100) / 100 }`
+ txtTxRust.textContent = `Taux: ${isNaN(wRust) ? 1 : wRust / 100 }`
 svg.appendChild(txtTxRust)
  
 
