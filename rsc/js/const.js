@@ -31,7 +31,6 @@ export let param = {
           event {
             id
             createdAt
-            status
             endAt
             parentId
           }
